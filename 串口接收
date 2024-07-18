@@ -1,0 +1,26 @@
+def receive_data():
+    global buffer
+    buffer = buffer.lstrip('#')  # 去除缓冲区头部的多余'#'
+    
+    
+    if uart.any():
+        char = uart.read(1).decode()
+        
+        if char == '#':
+            buffer = ""  # 清空缓冲区，准备接收新数据
+        elif char == ';':
+            if buffer:  # 确保有数据才返回
+                data = buffer
+                buffer = ""  # 清空缓冲区，准备接收下一个数据包
+                return data
+        else:
+            buffer += char  # 将字符添加到缓冲区
+        
+    else:
+        # 如果没有数据，可以适当等待，避免CPU空转
+        time.sleep_ms(1)
+
+buffer = ""  # 初始化全局变量用于存储数据
+
+while True:
+ data = receive_data()
