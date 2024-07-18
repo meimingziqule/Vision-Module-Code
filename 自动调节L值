@@ -1,7 +1,7 @@
 import sensor
 import image
 import time
-
+##记得先执行sensor.set_auto_whitebal(False)和sensor.set_auto_gain(False) 否则变不了
 l_value= 60
 baoguang = 20000
 baoguang_step = 1500
@@ -9,18 +9,6 @@ sensor.set_auto_exposure(False,baoguang)#设置感光度  这里至关重要
 auto_exposure_flag = True
 auto_exposure_first = True
 
-
-
-# 初始化摄像头传感器
-sensor.reset()
-sensor.set_pixformat(sensor.RGB565)  # 设置为灰度图像格式
-sensor.set_framesize(sensor.SVGA)
-l_value= 60
-baoguang = 10000
-baoguang_step = 2000
-clock = time.clock()
-sensor.set_auto_exposure(False,baoguang)#设置感光度  这里至关重要
-auto_exposure_flag = True
 while(True):
     clock.tick()
 
