@@ -1,0 +1,14 @@
+def find_max_red_blobs(blobs, img):
+    if not blobs:
+        print("没有找到任何 blobs")
+        return None
+
+    try:
+        red_blob = max(blobs, key=lambda b: b.pixels())
+        #print("x:%d,y:%d,w:%d,h:%d" % (red_blob.cx(), red_blob.cy(), red_blob.w(), red_blob.h()))
+        img.draw_cross(red_blob.cx(),red_blob.cy())
+        print("红色像素数量：%d" % red_blob.pixels())
+        return red_blob
+    except Exception as e:
+        print("发生错误: ", e)
+        return None
