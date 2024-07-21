@@ -1,0 +1,120 @@
+#在调整ROI前加入边界检查。(√)
+#只在所有调整完成后重新绘制一次ROI。
+#考虑使用更稳定的统计方法（如均值或中位数）来确定颜色阈值。（可以尝试一下）
+#处理多个按钮同时按下的情况，确保每个按钮的效果都被正确应用。（√）
+import sensor, image, time, pyb
+from pyb import Pin
+
+
+#初始阈值
+red_thresholds = (0, 100, 38, 77, 5, 69)   
+
+auto_thresholds_roi = (144,98,22,22)
+
+def find_max_blobs(blobs, img):
+    if not blobs:
+        print("没有找到任何 blobs")
+        return None
+
+    try:
+        red_blob = max(blobs, key=lambda b: b.pixels())
+        #print("x:%d,y:%d,w:%d,h:%d" % (red_blob.cx(), red_blob.cy(), red_blob.w(), red_blob.h()))
+        img.draw_cross(red_blob.cx(),red_blob.cy())
+        img.draw_rectangle(red_blob.rect())
+        print("色块像素数量：%d" % red_blob.pixels())
+        return red_blob
+    except Exception as e:
+        print("发生错误: ", e)
+        return None
+
+sensor.reset()                      # Reset and initialize the sensor.
+sensor.set_pixformat(sensor.RGB565) # Set pixel format to RGB565 (or GRAYSCALE)
+sensor.set_framesize(sensor.QVGA)   # Set frame size to QQVGA2 (128×160)
+sensor.skip_frames(time = 2000)     # Wait for settings take effect.
+clock = time.clock()                # Create a clock object to track the FPS.
+
+pin_value = [1,1,1,1,1,1,1]  # 0 1 0 1
+pin_num = [0,1,2,3,6,7,8]  
+
+red_thresholds_num = [0, 100, 38, 77, 5, 69]
+
+def handle_buttons():
+    global red_thresholds_num,red_thresholds,auto_thresholds_roi
+    if pin_value[0] == 0:
+        red_thresholds_num[0] += 2
+        if red_thresholds_num[0] >= 100:
+            red_thresholds_num[0] = 0
+        red_thresholds = (red_thresholds_num[0],red_thresholds_num[1],red_thresholds_num[2],red_thresholds_num[3],red_thresholds_num[4],red_thresholds_num[5])
+        pyb.delay(100)  # 消除按键抖动
+
+    if pin_value[1] == 0:
+        red_thresholds_num[1] += 2
+        if red_thresholds_num[1] >= 100:
+            red_thresholds_num[1] = 0
+        red_thresholds = (red_thresholds_num[0],red_thresholds_num[1],red_thresholds_num[2],red_thresholds_num[3],red_thresholds_num[4],red_thresholds_num[5])    
+        pyb.delay(100)
+
+    if pin_value[2] == 0:
+        red_thresholds_num[2] += 2
+        if red_thresholds_num[2] >= 127:
+            red_thresholds_num[2] = 0
+        red_thresholds = (red_thresholds_num[0],red_thresholds_num[1],red_thresholds_num[2],red_thresholds_num[3],red_thresholds_num[4],red_thresholds_num[5])    
+        pyb.delay(100)
+
+    if pin_value[3] == 0:
+        red_thresholds_num[3] += 2
+        if red_thresholds_num[3] >= 127:
+            red_thresholds_num[3] = 0
+        red_thresholds = (red_thresholds_num[0],red_thresholds_num[1],red_thresholds_num[2],red_thresholds_num[3],red_thresholds_num[4],red_thresholds_num[5])    
+        pyb.delay(200)  # 有问题找延时
+
+    if pin_value[4] == 0:
+        red_thresholds_num[4] += 2
+        if red_thresholds_num[4] >= 127:
+            red_thresholds_num[4] = 0
+        red_thresholds = (red_thresholds_num[0],red_thresholds_num[1],red_thresholds_num[2],red_thresholds_num[3],red_thresholds_num[4],red_thresholds_num[5])    
+        pyb.delay(100)
+
+    if pin_value[5] == 0:
+        red_thresholds_num[5] += 2
+        if red_thresholds_num[5] >= 127:
+            red_thresholds_num[5] = 0
+        red_thresholds = (red_thresholds_num[0],red_thresholds_num[1],red_thresholds_num[2],red_thresholds_num[3],red_thresholds_num[4],red_thresholds_num[5])    
+        pyb.delay(200)  # 有问题找延时
+        #自动阈值模式
+    if pin_value[6] == 0:
+        img.draw_rectangle(auto_thresholds_roi, color = (255,255,255))
+        statistics_Data = img.get_statistics(roi = auto_thresholds_roi )
+        color_L_median = statistics_Data.l_median()     #分别赋值LAB的众数
+        color_A_median = statistics_Data.a_median()
+        color_B_median = statistics_Data.b_median()
+        #计算颜色阈值，这样写的话，颜色阈值是实时变化的，后续想要什么效果可以自己修改
+        red_thresholds = (color_L_median-20, color_L_median+20, color_A_median-20, \
+                            color_A_median+20, color_B_median-20, color_B_median+20)
+        img.binary([red_thresholds]) #二值化看图像效果                    
+        #pyb.delay(200)   #有问题找延时         
+
+def pin_IN(pin_num):
+    for i in range(len(pin_num)):#设置引脚为输入引脚并获取引脚值
+        p_in = Pin('P'+str(pin_num[i]), Pin.IN, Pin.PULL_UP)
+        pin_value[i] = p_in.value()
+
+while(True):
+    clock.tick()                    # Update the FPS clock.
+    img = sensor.snapshot()       
+    red_blob = find_max_blobs(img.find_blobs([red_thresholds], pixels_threshold=10, area_threshold=10, merge=True), img)
+    #img.draw_rectangle(red_blob.rect())      #画框
+    #img.draw_cross(red_blob.cx(), red_blob.cy()) #画十字
+    pin_IN(pin_num)#设置GPIO引脚输入
+    
+    handle_buttons()#处理按钮按键响应
+    img.draw_rectangle(auto_thresholds_roi, color = (255,255,255))
+    
+    print('red_thresholds:',red_thresholds)
+    print(red_thresholds)        #打印输出颜色阈值
+   # print("fps:")
+    #fps = 'fps:'+str(clock.fps())
+
+    
+    print(clock.fps())
+ 
