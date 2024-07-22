@@ -186,7 +186,7 @@ def handle_buttons(image):#传入画面
             #自动阈值模式
         if pin_value[6] == 0:
             img.draw_rectangle((int(auto_thresholds_roi_num[0]),int(auto_thresholds_roi_num[1]),int(auto_thresholds_roi_num[2]),int(auto_thresholds_roi_num[3])), color = (255,255,255))
-            statistics_Data = img.get_statistics(roi = auto_thresholds_roi )
+            statistics_Data = img.get_statistics(roi = (int(auto_thresholds_roi_num[0]),int(auto_thresholds_roi_num[1]),int(auto_thresholds_roi_num[2]),int(auto_thresholds_roi_num[3])) )
             color_L_median = statistics_Data.l_median()     #分别赋值LAB的众数
             color_A_median = statistics_Data.a_median()
             color_B_median = statistics_Data.b_median()
