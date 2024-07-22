@@ -303,22 +303,15 @@ def pin_IN(pin_num):
         pin_value[i] = p_in.value()
 
 
-def sending_data(color,cx,cy):
-    global uart
-    data = ustruct.pack("<bbbbbb",
-    0x2c,0x12,int(color),int(cx),int(cy),0x5b)
 
-    uart.write(data)
-    #for i in data:
-        #print("data的内容是：    ",hex(i))
 
 while(True):
 
     #img = sensor.snapshot() # 从感光芯片获得一张图像
     img = sensor.snapshot()
-   # red_blobs = img.find_blobs([red_threshold],x_stride=2, y_stride=5, pixels_threshold=10 )
+  
     red_blobs = img.find_blobs([red_thresholds], x_stride=5, y_stride=5, pixels_threshold=5 )
-    #yellow_blobs = img.find_blobs([yellow_threshold], x_stride=5, y_stride=5, pixels_threshold=36 )       
+   
     if red_blobs:
         color_status = ord('B')
         for r in red_blobs:
@@ -328,7 +321,7 @@ while(True):
             img.draw_string(r[0], (r[1]-10), "red", color=(0,0,255))
             print("red_blob:中心X坐标",r[5],"中心Y坐标",r[6],"识别颜色类型","红色")
             
-            sending_data(color_status,r[5],r[6])
+            
     #只会执行一次  为了设置img的宽和高        
     if roi_set_one_flag== 1:        
         auto_thresholds_roi_num= [img.width()/2,img.height()/2,5,5]
@@ -336,17 +329,7 @@ while(True):
         roi_set_one_flag= 0
     else:
         pass
-    #elif yellow_blobs:
-    #    color_status = ord('Y')
-    #   for y in yellow_blobs:
-    #        img.draw_rectangle((y[0],y[1],y[2],y[3]),color=(255,255,255))
-    #        img.draw_cross(y[5], y[6],size=2,color=(255,255,255))
-    #        img.draw_string(y[0], (y[1]-10), "yellow", color=(255,255,0))
-    #        print("yellow_blob:中心X坐标",y[5],"中心Y坐标",y[6],"识别颜色类型","黄色")
-    #        #sending_data(color_status,y[5],y[6])
-    #else:
-    #    color_status = ord('A')
-        #sending_data(color_status,0,0)
+
 
     pin_IN(pin_num)#设置GPIO引脚输入
     handle_buttons(img)#处理按钮按键响应
